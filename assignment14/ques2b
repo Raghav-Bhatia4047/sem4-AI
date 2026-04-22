@@ -1,0 +1,64 @@
+class Clause:
+    def __init__(self, premise, conclusion):
+        self.premise = premise
+        self.conclusion = conclusion
+
+    def __repr__(self):
+        return f"{' ∧ '.join(self.premise)} → {self.conclusion}"
+
+
+def BACKWARD_CHAINING(KB, facts, goal, visited):
+    return OR_SEARCH(KB, facts, goal, visited, 0)
+
+
+def OR_SEARCH(KB, facts, goal, visited, depth):
+    indent = "  " * depth
+    print(f"{indent}OR: Try to prove {goal}")
+
+    if goal in facts:
+        print(f"{indent}✔ {goal} is a fact")
+        return True
+
+    if goal in visited:
+        print(f"{indent}↻ Cycle detected at {goal}")
+        return False
+
+    visited.add(goal)
+
+    for clause in KB:
+        if clause.conclusion == goal:
+            print(f"{indent}Using rule: {clause}")
+
+            result = AND_SEARCH(KB, facts, clause.premise, visited, depth + 1)
+
+            if result:
+                print(f"{indent}✔ Proved {goal}")
+                return True
+
+    print(f"{indent}✘ Failed to prove {goal}")
+    return False
+
+
+def AND_SEARCH(KB, facts, premises, visited, depth):
+    indent = "  " * depth
+    print(f"{indent}AND: Need to prove {premises}")
+
+    for p in premises:
+        if not OR_SEARCH(KB, facts, p, visited, depth + 1):
+            return False
+
+    return True
+
+
+KB = [
+    Clause(["A"], "B"),
+    Clause(["B", "C"], "D"),
+    Clause(["E"], "C")
+]
+
+facts = ["A", "E"]
+goal = "D"
+
+print("\n--- Backward Chaining Trace ---\n")
+result = BACKWARD_CHAINING(KB, facts, goal, set())
+print("\nResult:", result)

@@ -1,0 +1,87 @@
+import random
+
+route = [
+    [0, 10, 15, 20, 25, 30, 35, 40],
+    [12, 0, 35, 15, 20, 25, 30, 45],
+    [25, 30, 0, 10, 40, 20, 15, 35],
+    [18, 25, 12, 0, 15, 30, 20, 10],
+    [22, 18, 28, 20, 0, 15, 25, 30],
+    [35, 22, 18, 28, 12, 0, 40, 20],
+    [30, 35, 22, 18, 28, 32, 0, 15],
+    [40, 28, 35, 22, 18, 25, 12, 0]
+]
+
+N = 8
+
+
+def FITNESS(path):
+    c = 0
+    for i in range(N - 1):
+        c += route[path[i]][path[i + 1]]
+    c += route[path[-1]][path[0]]
+    return c
+
+
+def INIT_POPULATION(size):
+    pop = []
+    for _ in range(size):
+        p = list(range(N))
+        random.shuffle(p)
+        pop.append(p)
+    return pop
+
+
+def REPRODUCE(p1, p2):
+    n = len(p1)
+    c = random.randint(1, n - 1)
+
+    child = p1[:c]
+
+    for x in p2:
+        if x not in child:
+            child.append(x)
+
+    return child
+
+
+def MUTATE(child):
+    i, j = random.sample(range(N), 2)
+    child[i], child[j] = child[j], child[i]
+
+
+def GENETIC_ALGORITHM(pop_size=20, generations=200):
+    population = INIT_POPULATION(pop_size)
+    total_children = 0
+
+    for _ in range(generations):
+
+        population.sort(key=FITNESS)
+
+        new_population = population[:5]
+
+        while len(new_population) < pop_size:
+
+            p1, p2 = random.sample(population[:10], 2)
+
+            child = REPRODUCE(p1, p2)
+            total_children += 1
+
+            if random.random() < 0.1:
+                MUTATE(child)
+
+            new_population.append(child)
+
+        population = new_population
+
+    best = min(population, key=FITNESS)
+
+    return best, FITNESS(best), total_children
+
+
+print("Genetic Algorithm (AIMA Style)\n")
+
+best, cost, children = GENETIC_ALGORITHM()
+
+print("Best route:", best)
+print("Cost:", cost)
+print("Children generated:", children)

@@ -1,0 +1,84 @@
+import csv
+import random
+import math
+
+coordinates = []
+
+with open('cities.csv', 'r') as file:
+    points = csv.reader(file)
+    next(points)
+    for row in points:
+        coordinates.append((float(row[0]), float(row[1])))
+
+
+def dist(a, b):
+    return (a[0] - b[0])**2 + (a[1] - b[1])**2
+
+
+def value(centroid, points):
+    return sum(dist(p, centroid) for p in points)
+
+
+def gradient(centroid, points):
+    gx = 0
+    gy = 0
+    for x, y in points:
+        gx += (x - centroid[0])
+        gy += (y - centroid[1])
+    return (2 * gx, 2 * gy)
+
+
+def hill_climb(points, max_steps=100, lr=0.1):
+
+    cx = sum(p[0] for p in points) / len(points)
+    cy = sum(p[1] for p in points) / len(points)
+
+    state = (cx, cy)
+
+    for _ in range(max_steps):
+
+        gx, gy = gradient(state, points)
+
+        neighbor = (state[0] + lr * gx, state[1] + lr * gy)
+
+        if value(neighbor, points) < value(state, points):
+            state = neighbor
+            lr = min(lr * 1.2, 1.0)
+        else:
+            lr *= 0.5
+
+    return state
+
+
+def kmeans(points, k=3, iterations=50):
+
+    centroids = random.sample(points, k)
+
+    for _ in range(iterations):
+
+        clusters = [[] for _ in range(k)]
+
+        for p in points:
+            idx = min(range(k), key=lambda i: dist(p, centroids[i]))
+            clusters[idx].append(p)
+
+        for i in range(k):
+            if clusters[i]:
+                centroids[i] = hill_climb(clusters[i])
+
+    return centroids, clusters
+
+
+def total_cost(centroids, clusters):
+    return sum(dist(p, centroids[i])
+               for i in range(len(centroids))
+               for p in clusters[i])
+
+
+centroids, clusters = kmeans(coordinates)
+
+print("Cluster Centers (Local Search):")
+for c in centroids:
+    print(c)
+
+print("Total Cost:", total_cost(centroids, clusters))

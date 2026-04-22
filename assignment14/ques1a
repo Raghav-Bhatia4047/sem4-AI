@@ -1,0 +1,88 @@
+class Queue:
+    def __init__(self):
+        self.data = []
+
+    def push(self, item):
+        self.data.append(item)
+
+    def pop(self):
+        if not self.is_empty():
+            return self.data.pop(0)
+        return None
+
+    def is_empty(self):
+        return len(self.data) == 0
+
+
+class ClauseWrapper:
+    def __init__(self, premise, conclusion):
+        self.premise = premise
+        self.conclusion = conclusion
+
+    def __repr__(self):
+        return f"{' ∧ '.join(self.premise)} → {self.conclusion}"
+
+
+def PL_FC_ENTAILS(KB, facts, query):
+
+    count = {}
+    for clause in KB:
+        count[clause] = len(clause.premise)
+
+    symbols = set()
+    for clause in KB:
+        symbols.update(clause.premise)
+        symbols.add(clause.conclusion)
+
+    inferred = {}
+    for s in symbols:
+        inferred[s] = False
+
+    queue = Queue()
+    for fact in facts:
+        queue.push(fact)
+
+    print("\n--- Forward Chaining Trace ---\n")
+
+    while not queue.is_empty():
+
+        p = queue.pop()
+        print(f"Processing fact: {p}")
+
+        if p == query:
+            print(f"\n✔ Goal '{query}' reached!")
+            return True
+
+        if not inferred[p]:
+            inferred[p] = True
+
+            for clause in KB:
+                if p in clause.premise:
+
+                    print(f"  → Used in rule: {clause}")
+
+                    count[clause] -= 1
+                    print(f"  → Remaining premises needed: {count[clause]}")
+
+                    if count[clause] == 0:
+                        new_fact = clause.conclusion
+                        print(f"  ✔ Derived new fact: {new_fact}")
+                        queue.push(new_fact)
+
+        print(f"Current facts inferred: {[k for k,v in inferred.items() if v]}")
+        print("------")
+
+    print(f"\n❌ Goal '{query}' NOT reached")
+    return False
+
+
+KB = [
+    ClauseWrapper(["P"], "Q"),
+    ClauseWrapper(["L", "M"], "P"),
+    ClauseWrapper(["A", "B"], "L")
+]
+
+facts = ["A", "B", "M"]
+query = "Q"
+
+PL_FC_ENTAILS(KB, facts, query)

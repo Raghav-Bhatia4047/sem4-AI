@@ -1,0 +1,87 @@
+import csv
+import random
+import math
+
+coordinates = []
+
+with open('cities.csv', 'r') as file:
+    points = csv.reader(file)
+    next(points)
+    for row in points:
+        coordinates.append((float(row[0]), float(row[1])))
+
+
+def dist(a, b):
+    return (a[0]-b[0])**2 + (a[1]-b[1])**2
+
+
+def value(centroid, points):
+    return sum(dist(p, centroid) for p in points)
+
+
+def random_neighbor(c, step=1.0):
+    return (
+        c[0] + random.uniform(-step, step),
+        c[1] + random.uniform(-step, step)
+    )
+
+
+def simulated_annealing(points, max_steps=100):
+
+    current = (
+        sum(p[0] for p in points) / len(points),
+        sum(p[1] for p in points) / len(points)
+    )
+
+    T = 1.0
+    cooling = 0.95
+
+    for _ in range(max_steps):
+
+        next_state = random_neighbor(current)
+
+        delta = value(next_state, points) - value(current, points)
+
+        if delta < 0:
+            current = next_state
+        else:
+            if random.random() < math.exp(-delta / T):
+                current = next_state
+
+        T *= cooling
+
+    return current
+
+
+def kmeans_sa(points, k=3, iterations=50):
+
+    centroids = random.sample(points, k)
+
+    for _ in range(iterations):
+
+        clusters = [[] for _ in range(k)]
+
+        for p in points:
+            idx = min(range(k), key=lambda i: dist(p, centroids[i]))
+            clusters[idx].append(p)
+
+        for i in range(k):
+            if clusters[i]:
+                centroids[i] = simulated_annealing(clusters[i])
+
+    return centroids, clusters
+
+
+def total_cost(centroids, clusters):
+    return sum(dist(p, centroids[i])
+               for i in range(len(centroids))
+               for p in clusters[i])
+
+
+centroids, clusters = kmeans_sa(coordinates)
+
+print("Optimal 3 Airport Locations:")
+for c in centroids:
+    print(c)
+
+print("\nTotal Distance:", total_cost(centroids, clusters))

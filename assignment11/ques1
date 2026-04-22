@@ -1,0 +1,91 @@
+graph = {
+    "Kutch": [],
+    "Banaskantha": ["Patan", "Sabarkantha", "Mehsana"],
+    "Patan": ["Banaskantha", "Mehsana", "Surendranagar"],
+    "Mehsana": ["Patan", "Gandhinagar", "Sabarkantha", "Surendranagar", "Ahmedabad"],
+    "Sabarkantha": ["Mehsana", "Kheda", "Gandhinagar", "Panchmahal"],
+    "Gandhinagar": ["Mehsana", "Ahmedabad", "Sabarkantha", "Kheda"],
+    "Ahmedabad": ["Gandhinagar", "Kheda", "Anand", "Surendranagar", "Mehsana", "Bhavnagar"],
+    "Kheda": ["Ahmedabad", "Anand", "Panchmahal", "Vadodara", "Gandhinagar", "Sabarkantha"],
+    "Anand": ["Ahmedabad", "Kheda", "Vadodara"],
+    "Vadodara": ["Anand", "Bharuch", "Narmada", "Panchmahal", "Dahod"],
+    "Panchmahal": ["Kheda", "Vadodara", "Dahod", "Sabarkantha"],
+    "Dahod": ["Panchmahal", "Vadodara"],
+    "Narmada": ["Vadodara", "Bharuch", "Surat"],
+    "Bharuch": ["Vadodara", "Narmada", "Surat"],
+    "Surat": ["Bharuch", "Navsari", "Dang"],
+    "Navsari": ["Surat", "Valsad", "Dang"],
+    "Valsad": ["Navsari"],
+    "Dang": ["Navsari", "Surat"],
+    "Surendranagar": ["Patan", "Ahmedabad", "Rajkot", "Bhavnagar"],
+    "Rajkot": ["Surendranagar", "Jamnagar", "Amreli", "Bhavnagar", "Junagadh", "Porbandar"],
+    "Jamnagar": ["Rajkot", "Porbandar"],
+    "Porbandar": ["Jamnagar", "Junagadh", "Rajkot"],
+    "Junagadh": ["Porbandar", "Amreli", "Rajkot"],
+    "Amreli": ["Junagadh", "Rajkot", "Bhavnagar"],
+    "Bhavnagar": ["Amreli", "Ahmedabad", "Surendranagar", "Rajkot"]
+}
+
+
+variables = list(graph.keys())
+colors = ["Red", "Green", "Blue"]
+
+
+def neighbors(var):
+    return graph[var]
+
+
+def is_consistent(var, color, assignment):
+
+    for n in neighbors(var):
+        if n in assignment and assignment[n] == color:
+            return False
+
+    return True
+
+
+def select_unassigned_variable(assignment):
+
+    for v in variables:
+        if v not in assignment:
+            return v
+
+    return None
+
+
+def backtracking_search():
+
+    return backtrack({})
+
+
+def backtrack(assignment):
+
+    if len(assignment) == len(variables):
+        return assignment
+
+    var = select_unassigned_variable(assignment)
+
+    for value in colors:
+
+        if is_consistent(var, value, assignment):
+
+            assignment[var] = value
+
+            result = backtrack(assignment)
+
+            if result is not None:
+                return result
+
+            del assignment[var]
+
+    return None
+
+
+solution = backtracking_search()
+
+if solution:
+    print("Map Coloring Solution:\n")
+    for city in solution:
+        print(city, "->", solution[city])
+else:
+    print("No solution found")

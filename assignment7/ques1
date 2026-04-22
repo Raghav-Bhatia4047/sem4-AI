@@ -1,0 +1,63 @@
+import random
+
+
+def generate():
+    return [random.randint(0, 7) for _ in range(8)]
+
+
+def heuristic(board):
+    h = 0
+    for i in range(8):
+        for j in range(i + 1, 8):
+            if board[i] == board[j]:
+                h += 1
+            if abs(board[i] - board[j]) == abs(i - j):
+                h += 1
+    return h
+
+
+def get_neighbors(board):
+    neighbors = []
+
+    for i in range(8):
+        for j in range(8):
+            if board[i] != j:
+                new_board = board.copy()
+                new_board[i] = j
+                neighbors.append(new_board)
+
+    return neighbors
+
+
+def hill_climbing():
+    current = generate()
+    initial_h = heuristic(current)
+
+    steps = 0
+    nodes = 0
+
+    while True:
+        current_h = heuristic(current)
+
+        if current_h == 0:
+            return initial_h, current_h, steps, "Solved", current, nodes
+
+        neighbor_states = get_neighbors(current)
+        nodes += len(neighbor_states)
+
+        best = min(neighbor_states, key=heuristic)
+        best_h = heuristic(best)
+
+        if best_h >= current_h:
+            return initial_h, current_h, steps, "Fail", current, nodes
+
+        current = best
+        steps += 1
+
+
+results = [hill_climbing() for _ in range(50)]
+
+print("InitialH | FinalH | Steps | Nodes Generated | Result | Final Board")
+
+for r in results:
+    print(f"{r[0]:>8} | {r[1]:>6} | {r[2]:>5} | {r[5]:>15} | {r[3]:>6} | {r[4]}")

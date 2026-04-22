@@ -1,0 +1,98 @@
+import itertools
+
+
+class Symbol:
+    def __init__(self, name):
+        self.name = name
+
+    def evaluate(self, model):
+        return model[self.name]
+
+    def __repr__(self):
+        return self.name
+
+
+class Not:
+    def __init__(self, operand):
+        self.operand = operand
+
+    def evaluate(self, model):
+        return not EVAL(self.operand, model)
+
+    def __repr__(self):
+        return f"~{self.operand}"
+
+
+class And:
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def evaluate(self, model):
+        return EVAL(self.left, model) and EVAL(self.right, model)
+
+    def __repr__(self):
+        return f"({self.left} ∧ {self.right})"
+
+
+class Or:
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def evaluate(self, model):
+        return EVAL(self.left, model) or EVAL(self.right, model)
+
+    def __repr__(self):
+        return f"({self.left} ∨ {self.right})"
+
+
+class Implies:
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def evaluate(self, model):
+        return (not EVAL(self.left, model)) or EVAL(self.right, model)
+
+    def __repr__(self):
+        return f"({self.left} → {self.right})"
+
+
+class Biconditional:
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def evaluate(self, model):
+        return EVAL(self.left, model) == EVAL(self.right, model)
+
+    def __repr__(self):
+        return f"({self.left} ↔ {self.right})"
+
+
+def EVAL(expr, model):
+    return expr.evaluate(model)
+
+
+def PL_TRUE(expr, model):
+    return EVAL(expr, model)
+
+
+def TRUTH_TABLE(expr, symbols):
+
+    print("\nTruth Table:", expr)
+
+    for s in symbols:
+        print(s.name, end=" ")
+    print("| Result")
+
+    for values in itertools.product([False, True], repeat=len(symbols)):
+
+        model = dict(zip([s.name for s in symbols], values))
+
+        for v in values:
+            print("T" if v else "F", end=" ")
+
+        result = PL_TRUE(expr, model)
+        print("|", "T" if result else "F")

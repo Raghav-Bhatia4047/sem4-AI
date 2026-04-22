@@ -1,0 +1,101 @@
+class Queue:
+    def __init__(self):
+        self.data = []
+
+    def push(self, item):
+        self.data.append(item)
+
+    def pop(self):
+        return self.data.pop(0) if not self.is_empty() else None
+
+    def is_empty(self):
+        return len(self.data) == 0
+
+
+class CSP:
+    def __init__(self, variables, domains, neighbors, constraint):
+        self.variables = variables
+        self.domains = domains
+        self.neighbors = neighbors
+        self.constraint = constraint
+
+
+def REVISE(csp, Xi, Xj):
+    revised = False
+
+    for x in csp.domains[Xi][:]:
+        satisfies = False
+
+        for y in csp.domains[Xj]:
+            if csp.constraint(Xi, x, Xj, y):
+                satisfies = True
+                break
+
+        if not satisfies:
+            csp.domains[Xi].remove(x)
+            revised = True
+
+    return revised
+
+
+def AC3(csp):
+    queue = Queue()
+
+    for Xi in csp.variables:
+        for Xj in csp.neighbors[Xi]:
+            queue.push((Xi, Xj))
+
+    while not queue.is_empty():
+
+        Xi, Xj = queue.pop()
+
+        if REVISE(csp, Xi, Xj):
+
+            if len(csp.domains[Xi]) == 0:
+                return False
+
+            for Xk in csp.neighbors[Xi]:
+                if Xk != Xj:
+                    queue.push((Xk, Xi))
+
+    return True
+
+
+def solve_q1():
+
+    variables = ["P1", "P2", "P3", "P4", "P5", "P6"]
+
+    domains = {v: ["R1", "R2", "R3"][:] for v in variables}
+
+    neighbors = {
+        "P1": ["P2", "P3", "P6"],
+        "P2": ["P1", "P3", "P4"],
+        "P3": ["P1", "P2", "P5"],
+        "P4": ["P2", "P6"],
+        "P5": ["P3", "P6"],
+        "P6": ["P1", "P4", "P5"]
+    }
+
+    def constraint(Xi, x, Xj, y):
+        return x != y
+
+    csp = CSP(variables, domains, neighbors, constraint)
+
+    print("=== AC-3 Initial Run ===")
+    result = AC3(csp)
+
+    print("Arc Consistent:", result)
+    print("Domains:", csp.domains)
+
+    print("\n=== After Assign P1 = R1 ===")
+
+    csp.domains["P1"] = ["R1"]
+
+    result2 = AC3(csp)
+
+    print("Arc Consistent:", result2)
+    print("Domains:", csp.domains)
+
+
+if __name__ == "__main__":
+    solve_q1()

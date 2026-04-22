@@ -1,0 +1,61 @@
+class Clause:
+    def __init__(self, premise, conclusion):
+        self.premise = premise
+        self.conclusion = conclusion
+
+    def __repr__(self):
+        return f"{' ∧ '.join(self.premise)} → {self.conclusion}"
+
+
+def BACKWARD_CHAINING(KB, facts, goal, visited, depth=0):
+
+    indent = "  " * depth
+    print(f"{indent}Trying to prove: {goal}")
+
+    if goal in facts:
+        print(f"{indent}✔ {goal} is a fact")
+        return True
+
+    if goal in visited:
+        print(f"{indent}↻ Already visited {goal}")
+        return False
+
+    visited.add(goal)
+
+    for clause in KB:
+
+        if clause.conclusion == goal:
+
+            print(f"{indent}Using rule: {clause}")
+
+            all_true = True
+
+            for premise in clause.premise:
+
+                print(f"{indent}→ Need to prove: {premise}")
+
+                if not BACKWARD_CHAINING(KB, facts, premise, visited, depth + 1):
+                    all_true = False
+                    break
+
+            if all_true:
+                print(f"{indent}✔ Proved: {goal}")
+                return True
+
+    print(f"{indent}✘ Cannot prove: {goal}")
+    return False
+
+
+KB = [
+    Clause(["P"], "Q"),
+    Clause(["R"], "Q"),
+    Clause(["A"], "P"),
+    Clause(["B"], "R")
+]
+
+facts = ["A", "B"]
+goal = "Q"
+
+print("\n--- Backward Chaining Trace ---\n")
+result = BACKWARD_CHAINING(KB, facts, goal, set())
+print("\nResult:", result)

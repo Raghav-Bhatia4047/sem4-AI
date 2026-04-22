@@ -1,0 +1,111 @@
+class PriorityQueue:
+    def __init__(self):
+        self.elements = []
+
+    def is_empty(self):
+        return len(self.elements) == 0
+
+    def put(self, item, priority):
+        self.elements.append((priority, item))
+        self.elements.sort(key=lambda x: x[0])
+
+    def get(self):
+        return self.elements.pop(0)[1]
+
+
+maze = [
+    [2,0,0,0,1],
+    [0,1,0,0,3],
+    [0,3,0,1,1],
+    [0,1,0,0,1],
+    [3,0,0,0,3]
+]
+
+start = None
+goals = []
+
+for i in range(5):
+    for j in range(5):
+        if maze[i][j] == 2:
+            start = (i, j)
+        elif maze[i][j] == 3:
+            goals.append((i, j))
+
+
+def heuristic(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+
+def neighbors(pos):
+    x, y = pos
+    result = []
+
+    for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+        nx, ny = x + dx, y + dy
+        if 0 <= nx < 5 and 0 <= ny < 5 and maze[nx][ny] != 1:
+            result.append((nx, ny))
+
+    return result
+
+
+def best_first_search(start, goal):
+    frontier = PriorityQueue()
+    frontier.put((start, [start], 0), heuristic(start, goal))
+
+    reached = {start: 0}
+
+    step = 0
+
+    print("Step\tNode\tG\tH\tF\tPath")
+
+    while not frontier.is_empty():
+        state, path, g = frontier.get()
+
+        h = heuristic(state, goal)
+        f = g + h
+        step += 1
+
+        print(step, state, g, h, f, path)
+
+        if state == goal:
+            return path
+
+        for nxt in neighbors(state):
+            new_g = g + 1
+
+            if nxt not in reached or new_g < reached[nxt]:
+                reached[nxt] = new_g
+                frontier.put((nxt, path + [nxt], new_g), new_g + heuristic(nxt, goal))
+
+    return None
+
+
+def solve(start, goals):
+    current = start
+    remaining = goals[:]
+
+    full_path = [start]
+
+    while remaining:
+        remaining.sort(key=lambda g: heuristic(current, g))
+        goal = remaining[0]
+
+        print(f"\nMoving toward goal: {goal}")
+
+        path = best_first_search(current, goal)
+
+        if not path:
+            print("Goal unreachable")
+            return full_path
+
+        full_path.extend(path[1:])
+        current = goal
+        remaining.remove(goal)
+
+    return full_path
+
+
+result = solve(start, goals)
+
+print("\nFinal path:")
+print(result)

@@ -1,0 +1,124 @@
+import math
+
+cities = [
+    "Chicago","Indianapolis","Detroit","Cleveland","Columbus","Buffalo",
+    "Pittsburgh","Syracuse","Baltimore","Philadelphia","New York",
+    "Boston","Providence","Portland"
+]
+
+n = len(cities)
+
+adj = [[0]*n for _ in range(n)]
+
+def add_edge(a, b, w):
+    i, j = cities.index(a), cities.index(b)
+    adj[i][j] = w
+    adj[j][i] = w
+
+
+add_edge("Chicago","Indianapolis",182)
+add_edge("Chicago","Detroit",283)
+add_edge("Chicago","Cleveland",345)
+add_edge("Indianapolis","Columbus",176)
+add_edge("Detroit","Cleveland",169)
+add_edge("Detroit","Buffalo",256)
+add_edge("Cleveland","Buffalo",189)
+add_edge("Cleveland","Pittsburgh",134)
+add_edge("Cleveland","Columbus",144)
+add_edge("Columbus","Pittsburgh",185)
+add_edge("Buffalo","Pittsburgh",215)
+add_edge("Buffalo","Syracuse",150)
+add_edge("Pittsburgh","Baltimore",247)
+add_edge("Pittsburgh","Philadelphia",305)
+add_edge("Syracuse","Philadelphia",254)
+add_edge("Syracuse","Boston",312)
+add_edge("Baltimore","Philadelphia",101)
+add_edge("Philadelphia","New York",97)
+add_edge("New York","Providence",181)
+add_edge("New York","Boston",215)
+add_edge("Boston","Providence",50)
+add_edge("Boston","Portland",107)
+
+start = cities.index("Syracuse")
+goal = cities.index("Chicago")
+
+nodes_expanded = 0
+
+
+def terminal_test(node):
+    return node == goal
+
+
+def actions(node, visited):
+    for i in range(n):
+        if adj[node][i] != 0 and i not in visited:
+            yield i
+
+
+def alpha_beta_search():
+    global nodes_expanded
+    value, move = max_value(start, [start], -math.inf, math.inf)
+    return value, move
+
+
+def max_value(state, visited, alpha, beta):
+    global nodes_expanded
+    nodes_expanded += 1
+
+    if terminal_test(state):
+        return 0, [state]
+
+    v = -math.inf
+    best_path = []
+
+    for a in actions(state, visited):
+        cost, path = min_value(a, visited + [a], alpha, beta)
+        cost += adj[state][a]
+
+        if cost > v:
+            v = cost
+            best_path = [state] + path
+
+        alpha = max(alpha, v)
+
+        if v >= beta:
+            break
+
+    return v, best_path
+
+
+def min_value(state, visited, alpha, beta):
+    global nodes_expanded
+    nodes_expanded += 1
+
+    if terminal_test(state):
+        return 0, [state]
+
+    v = math.inf
+    best_path = []
+
+    for a in actions(state, visited):
+        cost, path = max_value(a, visited + [a], alpha, beta)
+        cost += adj[state][a]
+
+        if cost < v:
+            v = cost
+            best_path = [state] + path
+
+        beta = min(beta, v)
+
+        if v <= alpha:
+            break
+
+    return v, best_path
+
+
+cost, path = alpha_beta_search()
+
+print("Result cost:", cost)
+print("Path:")
+for i in path:
+    print(cities[i], end=" -> ")
+print("END")
+
+print("Nodes explored:", nodes_expanded)

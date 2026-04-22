@@ -1,0 +1,114 @@
+import random
+import math
+
+N = 8
+
+
+def generate():
+    return [random.randint(0, 7) for _ in range(N)]
+
+
+def VALUE(board):
+    h = 0
+    for i in range(N):
+        for j in range(i + 1, N):
+            if board[i] == board[j]:
+                h += 1
+            if abs(board[i] - board[j]) == abs(i - j):
+                h += 1
+    return h
+
+
+def neighbors(board):
+    result = []
+    for i in range(N):
+        for j in range(N):
+            if board[i] != j:
+                new_board = board.copy()
+                new_board[i] = j
+                result.append(new_board)
+    return result
+
+
+def steepest_ascent():
+    current = generate()
+
+    while True:
+        current_value = VALUE(current)
+        neighbor_states = neighbors(current)
+
+        best = min(neighbor_states, key=VALUE)
+        best_value = VALUE(best)
+
+        if best_value >= current_value:
+            return current
+
+        current = best
+
+
+def first_choice():
+    current = generate()
+    MAX_TRIALS = 80
+
+    while True:
+        current_value = VALUE(current)
+        improved = False
+
+        for _ in range(MAX_TRIALS):
+            i = random.randint(0, N - 1)
+            j = random.randint(0, N - 1)
+
+            if current[i] != j:
+                next_state = current.copy()
+                next_state[i] = j
+
+                if VALUE(next_state) < current_value:
+                    current = next_state
+                    improved = True
+                    break
+
+        if not improved:
+            return current
+
+
+def schedule(t):
+    return max(0.1, 100 * (0.95 ** t))
+
+
+def simulated_annealing():
+    current = generate()
+    t = 1
+
+    while True:
+        T = schedule(t)
+
+        if T == 0:
+            return current
+
+        next_state = random.choice(neighbors(current))
+
+        deltaE = VALUE(current) - VALUE(next_state)
+
+        if deltaE > 0:
+            current = next_state
+        else:
+            if random.random() < math.exp(deltaE / T):
+                current = next_state
+
+        t += 1
+
+
+# Run experiments
+
+def run(name, func):
+    print("\n", name)
+    print("Resulting Board | Heuristic")
+
+    for _ in range(5):
+        result = func()
+        print(result, VALUE(result))
+
+
+run("Steepest Ascent Hill Climbing", steepest_ascent)
+run("First Choice Hill Climbing", first_choice)
+run("Simulated Annealing", simulated_annealing)

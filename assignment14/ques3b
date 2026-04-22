@@ -1,0 +1,96 @@
+class Clause:
+    def __init__(self, literals):
+        self.literals = frozenset(literals)
+
+    def __eq__(self, other):
+        return self.literals == other.literals
+
+    def __hash__(self):
+        return hash(self.literals)
+
+    def __repr__(self):
+        return " ∨ ".join(self.literals) if self.literals else "{}"
+
+
+def negate(lit):
+    return lit[1:] if lit.startswith("~") else "~" + lit
+
+
+def pl_resolve(ci, cj):
+    resolvents = set()
+
+    for li in ci.literals:
+        for lj in cj.literals:
+            if li == negate(lj):
+                new_clause = set(ci.literals | cj.literals)
+                new_clause.remove(li)
+                new_clause.remove(lj)
+                resolvents.add(Clause(new_clause))
+
+    return resolvents
+
+
+def pl_resolution(KB, alpha):
+    clauses = set(Clause(c) for c in KB)
+    neg_alpha = Clause([negate(alpha)])
+
+    print("\n--- Initial Clauses ---")
+    for c in clauses:
+        print(c)
+
+    print(f"\nAdding negated goal: {neg_alpha}")
+    clauses.add(neg_alpha)
+
+    new = set()
+    step = 1
+
+    while True:
+        print(f"\n--- Step {step} ---")
+        step += 1
+
+        pairs = [(ci, cj) for ci in clauses for cj in clauses if ci != cj]
+
+        any_resolution = False
+        new = set()
+
+        for ci, cj in pairs:
+            resolvents = pl_resolve(ci, cj)
+
+            if resolvents:
+                print(f"Resolving: ({ci}) and ({cj})")
+                any_resolution = True
+
+            for r in resolvents:
+                print(f"  ⇒ Derived: {r}")
+
+                if len(r.literals) == 0:
+                    print("❌ Empty clause {} found → CONTRADICTION")
+                    return True
+
+                new.add(r)
+
+        if not any_resolution:
+            print("\nNo more resolvable clauses → FAILURE")
+            return False
+
+        if new.issubset(clauses):
+            print("\nNo new clauses generated → STOP")
+            return False
+
+        clauses |= new
+
+        print("\nUpdated clause set:")
+        for c in clauses:
+            print(c)
+
+
+KB_b = [
+    ["~P", "Q"],
+    ["~Q", "R"],
+    ["~S", "~R"],
+    ["P"]
+]
+
+alpha_b = "S"
+
+print("\nRESULT:", pl_resolution(KB_b, alpha_b))

@@ -1,0 +1,89 @@
+class Queue:
+    def __init__(self):
+        self.data = []
+
+    def push(self, item):
+        self.data.append(item)
+
+    def pop(self):
+        if not self.is_empty():
+            return self.data.pop(0)
+        return None
+
+    def is_empty(self):
+        return len(self.data) == 0
+
+
+class Clause:
+    def __init__(self, premise, conclusion):
+        self.premise = premise
+        self.conclusion = conclusion
+
+    def __repr__(self):
+        return f"{' ∧ '.join(self.premise)} → {self.conclusion}"
+
+
+def PL_FC_ENTAILS(KB, facts, query):
+
+    count = {}
+    inferred = {}
+
+    queue = Queue()
+
+    symbols = set()
+    for clause in KB:
+        count[clause] = len(clause.premise)
+        symbols.update(clause.premise)
+        symbols.add(clause.conclusion)
+
+    for s in symbols:
+        inferred[s] = False
+
+    for fact in facts:
+        queue.push(fact)
+
+    print("\n--- Forward Chaining Trace ---\n")
+
+    while not queue.is_empty():
+
+        p = queue.pop()
+        print(f"Processing fact: {p}")
+
+        if p == query:
+            print(f"\n✔ Goal '{query}' reached!")
+            return True
+
+        if not inferred[p]:
+            inferred[p] = True
+
+            for clause in KB:
+                if p in clause.premise:
+
+                    print(f"  → Used in rule: {clause}")
+
+                    count[clause] -= 1
+                    print(f"  → Remaining premises: {count[clause]}")
+
+                    if count[clause] == 0:
+                        new_fact = clause.conclusion
+                        print(f"  ✔ Derived: {new_fact}")
+                        queue.push(new_fact)
+
+        print(f"Current inferred facts: {[k for k,v in inferred.items() if v]}")
+        print("------")
+
+    print(f"\n❌ Goal '{query}' NOT reached")
+    return False
+
+
+KB = [
+    Clause(["A"], "B"),
+    Clause(["B"], "C"),
+    Clause(["C"], "D"),
+    Clause(["D", "E"], "F")
+]
+
+facts = ["A", "E"]
+query = "F"
+
+PL_FC_ENTAILS(KB, facts, query)

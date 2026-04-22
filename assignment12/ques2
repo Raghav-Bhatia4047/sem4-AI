@@ -1,0 +1,149 @@
+class Queue:
+    def __init__(self):
+        self.data = []
+
+    def push(self, item):
+        self.data.append(item)
+
+    def pop(self):
+        return self.data.pop(0)
+
+    def is_empty(self):
+        return len(self.data) == 0
+
+
+class CSP:
+    def __init__(self, variables, domains, neighbors, constraint):
+        self.variables = variables
+        self.domains = domains
+        self.neighbors = neighbors
+        self.constraint = constraint
+
+
+def REVISE(csp, Xi, Xj):
+    revised = False
+
+    for x in csp.domains[Xi][:]:
+        satisfied = False
+
+        for y in csp.domains[Xj]:
+            if csp.constraint(Xi, x, Xj, y):
+                satisfied = True
+                break
+
+        if not satisfied:
+            csp.domains[Xi].remove(x)
+            revised = True
+
+    return revised
+
+
+def AC3(csp):
+    queue = Queue()
+
+    for Xi in csp.variables:
+        for Xj in csp.neighbors[Xi]:
+            queue.push((Xi, Xj))
+
+    while not queue.is_empty():
+
+        Xi, Xj = queue.pop()
+
+        if REVISE(csp, Xi, Xj):
+
+            if len(csp.domains[Xi]) == 0:
+                return False
+
+            for Xk in csp.neighbors[Xi]:
+                if Xk != Xj:
+                    queue.push((Xk, Xi))
+
+    return True
+
+
+def sudoku_neighbors():
+    neighbors = {}
+
+    for r in range(9):
+        for c in range(9):
+
+            var = (r, c)
+            neighbors[var] = set()
+
+            for k in range(9):
+                if k != c:
+                    neighbors[var].add((r, k))
+                if k != r:
+                    neighbors[var].add((k, c))
+
+            br, bc = 3 * (r // 3), 3 * (c // 3)
+
+            for i in range(br, br + 3):
+                for j in range(bc, bc + 3):
+                    if (i, j) != (r, c):
+                        neighbors[var].add((i, j))
+
+    return neighbors
+
+
+def sudoku_csp(grid):
+
+    variables = [(r, c) for r in range(9) for c in range(9)]
+    domains = {}
+
+    for r in range(9):
+        for c in range(9):
+            if grid[r][c] == 0:
+                domains[(r, c)] = list(range(1, 10))
+            else:
+                domains[(r, c)] = [grid[r][c]]
+
+    neighbors = sudoku_neighbors()
+
+    def constraint(Xi, x, Xj, y):
+        return x != y
+
+    return CSP(variables, domains, neighbors, constraint)
+
+
+def count_values(domains):
+    return sum(len(v) for v in domains.values())
+
+
+def print_domain_sizes(domains):
+    print("\nDomain Size Grid:")
+    for r in range(9):
+        print(" ".join(str(len(domains[(r, c)])) for c in range(9)))
+
+
+def solve_q2():
+
+    grid = [
+        [0,0,0,0,0,6,0,0,0],
+        [0,5,9,0,0,0,0,0,8],
+        [2,0,0,0,0,8,0,0,0],
+        [0,4,5,0,0,0,0,0,0],
+        [0,0,3,0,0,0,0,0,0],
+        [0,0,6,0,0,3,0,5,0],
+        [0,0,0,0,0,7,0,0,0],
+        [0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,5,0,0,0,2]
+    ]
+
+    csp = sudoku_csp(grid)
+
+    before = count_values(csp.domains)
+
+    print("=== AC-3 Running on Sudoku ===")
+    result = AC3(csp)
+
+    after = count_values(csp.domains)
+
+    print("Arc Consistent:", result)
+    print("Values removed:", before - after)
+
+    print_domain_sizes(csp.domains)
+
+
+if __name__ == "__main__":
+    solve_q2()

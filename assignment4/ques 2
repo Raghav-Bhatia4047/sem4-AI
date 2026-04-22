@@ -1,0 +1,121 @@
+ROWS, COLS = 5, 11
+NODES = ROWS * COLS
+
+
+class Node:
+    def __init__(self, state, parent, path_cost, f):
+        self.state = state
+        self.parent = parent
+        self.path_cost = path_cost
+        self.f = f
+
+
+class PriorityQueue:
+    def __init__(self):
+        self.data = []
+
+    def push(self, node):
+        self.data.append(node)
+        self.data.sort(key=lambda x: x.f)
+
+    def pop(self):
+        return self.data.pop(0)
+
+    def empty(self):
+        return len(self.data) == 0
+
+
+def abs_value(p1, p2):
+    return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
+
+
+grid = [
+    [1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,1,0,1,1,1,0,1],
+    [1,0,0,0,1,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1]
+]
+
+
+def node_id(r, c):
+    return r * COLS + c
+
+
+def id_to_pos(idx):
+    return divmod(idx, COLS)
+
+
+def build_adjacency_matrix():
+    adj = [[0] * NODES for _ in range(NODES)]
+
+    for r in range(ROWS):
+        for c in range(COLS):
+            if grid[r][c] == 0:
+                u = node_id(r, c)
+
+                if r > 0 and grid[r-1][c] == 0:
+                    adj[u][node_id(r-1, c)] = 1
+                if r < ROWS-1 and grid[r+1][c] == 0:
+                    adj[u][node_id(r+1, c)] = 1
+                if c > 0 and grid[r][c-1] == 0:
+                    adj[u][node_id(r, c-1)] = 1
+                if c < COLS-1 and grid[r][c+1] == 0:
+                    adj[u][node_id(r, c+1)] = 1
+
+    return adj
+
+
+def print_path(node):
+    if node is None:
+        return
+    print_path(node.parent)
+    print(node.state, end=" ")
+
+
+def best_first_search(start, goal):
+    adj = build_adjacency_matrix()
+
+    frontier = PriorityQueue()
+    reached = {}
+
+    start_node = Node(start, None, 0, abs_value(start, goal))
+
+    frontier.push(start_node)
+    reached[start] = start_node
+
+    while not frontier.empty():
+        node = frontier.pop()
+
+        if node.state == goal:
+            print("Goal reached")
+            print("Path:", end=" ")
+            print_path(node)
+            print()
+            return
+
+        r, c = node.state
+        u = node_id(r, c)
+
+        for v in range(NODES):
+            if adj[u][v] == 1:
+                new_state = id_to_pos(v)
+                new_cost = node.path_cost + 1
+
+                if new_state not in reached or new_cost < reached[new_state].path_cost:
+                    child = Node(
+                        new_state,
+                        node,
+                        new_cost,
+                        abs_value(new_state, goal)
+                    )
+                    reached[new_state] = child
+                    frontier.push(child)
+
+    print("No path found")
+
+
+start = (3, 1)
+goal = (1, 9)
+
+best_first_search(start, goal)

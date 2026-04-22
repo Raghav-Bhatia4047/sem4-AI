@@ -1,0 +1,89 @@
+letters = ["S", "E", "N", "D", "M", "O", "R", "Y"]
+digits = list(range(10))
+
+
+def BACKTRACK(assignment):
+    if len(assignment) == len(letters):
+        if CONSTRAINT_SATISFIED(assignment):
+            return assignment
+        return None
+
+    var = SELECT_UNASSIGNED_VARIABLE(assignment)
+
+    for value in ORDER_DOMAIN_VALUES(var, assignment):
+        if IS_SAFE(var, value, assignment):
+
+            assignment[var] = value
+
+            result = BACKTRACK(assignment)
+            if result is not None:
+                return result
+
+            del assignment[var]
+
+    return None
+
+
+def SELECT_UNASSIGNED_VARIABLE(assignment):
+    for ch in letters:
+        if ch not in assignment:
+            return ch
+
+
+def ORDER_DOMAIN_VALUES(var, assignment):
+    return digits
+
+
+def IS_SAFE(letter, digit, assignment):
+
+    if digit in assignment.values():
+        return False
+
+    if (letter == "S" or letter == "M") and digit == 0:
+        return False
+
+    return True
+
+
+def CONSTRAINT_SATISFIED(mapping):
+
+    S = mapping["S"]
+    E = mapping["E"]
+    N = mapping["N"]
+    D = mapping["D"]
+    M = mapping["M"]
+    O = mapping["O"]
+    R = mapping["R"]
+    Y = mapping["Y"]
+
+    send = 1000*S + 100*E + 10*N + D
+    more = 1000*M + 100*O + 10*R + E
+    money = 10000*M + 1000*O + 100*N + 10*E + Y
+
+    return send + more == money
+
+
+def SOLVE_CRYPTO():
+    return BACKTRACK({})
+
+
+solution = SOLVE_CRYPTO()
+
+
+if solution:
+    print("Solution Found:\n")
+    for k in solution:
+        print(k, "=", solution[k])
+
+    S,E,N,D,M,O,R,Y = [solution[x] for x in letters]
+
+    send = 1000*S + 100*E + 10*N + D
+    more = 1000*M + 100*O + 10*R + E
+    money = 10000*M + 1000*O + 100*N + 10*E + Y
+
+    print("\nSEND  =", send)
+    print("MORE  =", more)
+    print("MONEY =", money)
+
+else:
+    print("No solution found")

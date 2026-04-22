@@ -1,0 +1,82 @@
+class Clause:
+    def __init__(self, literals):
+        self.literals = frozenset(literals)
+
+    def __eq__(self, other):
+        return self.literals == other.literals
+
+    def __hash__(self):
+        return hash(self.literals)
+
+    def __repr__(self):
+        return " ∨ ".join(self.literals) if self.literals else "{}"
+
+
+def NEGATE(lit):
+    return lit[1:] if lit.startswith("~") else "~" + lit
+
+
+def PL_RESOLVE(ci, cj):
+    resolvents = set()
+
+    for li in ci.literals:
+        for lj in cj.literals:
+            if li == NEGATE(lj):
+                new_clause = set(ci.literals | cj.literals)
+                new_clause.remove(li)
+                new_clause.remove(lj)
+                resolvents.add(Clause(new_clause))
+
+    return resolvents
+
+
+def PL_RESOLUTION(KB, alpha):
+    clauses = set(Clause(c) for c in KB)
+    new = set()
+
+    neg_alpha = Clause([NEGATE(alpha)])
+    clauses.add(neg_alpha)
+
+    print("\n--- Initial Clauses ---")
+    for c in clauses:
+        print(c)
+
+    while True:
+
+        pairs = [(ci, cj) for ci in clauses for cj in clauses if ci != cj]
+
+        for ci, cj in pairs:
+            resolvents = PL_RESOLVE(ci, cj)
+
+            for r in resolvents:
+
+                if r not in new:
+                    print(f"Resolving: ({ci}) , ({cj}) → {r}")
+
+                if len(r.literals) == 0:
+                    print("❌ Empty clause derived → SUCCESS")
+                    return True
+
+                new.add(r)
+
+        if new.issubset(clauses):
+            print("\nNo new clauses → FAILURE")
+            return False
+
+        clauses = clauses.union(new)
+
+        print("\nUpdated clauses:")
+        for c in clauses:
+            print(c)
+
+
+KB = [
+    ["P", "Q"],
+    ["~P", "R"],
+    ["~Q", "S"],
+    ["~R", "S"]
+]
+
+alpha = "S"
+
+print("\nRESULT:", PL_RESOLUTION(KB, alpha))

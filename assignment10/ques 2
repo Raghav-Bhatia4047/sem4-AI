@@ -1,0 +1,90 @@
+class VacuumProblem:
+    def __init__(self, initial):
+        self.INITIAL = initial
+
+    def IS_GOAL(self, state):
+        _, a, b = state
+        return a == "Clean" and b == "Clean"
+
+    def ACTIONS(self, state):
+        return ["Suck", "Left", "Right"]
+
+    def RESULTS(self, state, action):
+        location, a, b = state
+        outcomes = []
+
+        if action == "Suck":
+            if location == "A":
+                if a == "Dirty":
+                    outcomes.append(("A", "Clean", b))
+                else:
+                    outcomes.append(("A", a, b))
+
+            elif location == "B":
+                if b == "Dirty":
+                    outcomes.append(("B", a, "Clean"))
+                else:
+                    outcomes.append(("B", a, b))
+
+        elif action == "Left":
+            outcomes.append(("A", a, b))
+
+        elif action == "Right":
+            outcomes.append(("B", a, b))
+
+        return outcomes
+
+
+def is_cycle(state, path):
+    return state in path
+
+
+def AND_OR_SEARCH(problem):
+    return OR_SEARCH(problem, problem.INITIAL, [])
+
+
+def OR_SEARCH(problem, state, path):
+
+    if problem.IS_GOAL(state):
+        return []
+
+    if is_cycle(state, path):
+        return "failure"
+
+    for action in problem.ACTIONS(state):
+
+        plan = AND_SEARCH(
+            problem,
+            problem.RESULTS(state, action),
+            [state] + path
+        )
+
+        if plan != "failure":
+            return [action, plan]
+
+    return "failure"
+
+
+def AND_SEARCH(problem, states, path):
+
+    plans = []
+
+    for s in states:
+
+        plan = OR_SEARCH(problem, s, path)
+
+        if plan == "failure":
+            return "failure"
+
+        plans.append(plan)
+
+    return plans
+
+
+initial_state = ("A", "Dirty", "Dirty")
+problem = VacuumProblem(initial_state)
+
+plan = AND_OR_SEARCH(problem)
+
+print("Conditional Plan:")
+print(plan)
